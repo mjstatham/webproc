@@ -10,23 +10,14 @@ import (
 )
 
 type (
-	Log      string
 	OnExit   string
-	OnSave   string
 	Duration time.Duration
 )
 
 const (
-	LogBoth  Log = "both"
-	LogWebUI Log = "webui"
-	LogProxy Log = "proxy"
-
 	OnExitRestart OnExit = "restart"
 	OnExitIgnore  OnExit = "ignore"
 	OnExitProxy   OnExit = "proxy"
-
-	OnSaveRestart  OnSave = "restart"
-	OnSaveContinue OnSave = "continue"
 )
 
 //Config is shared for both toml unmarshalling and opts CLI generation.
@@ -34,19 +25,11 @@ const (
 type Config struct {
 	Host               string   `opts:"help=listening interface, default=0.0.0.0"`
 	Port               int      `opts:"help=listening port, default=8080, env=PORT"`
-	User               string   `opts:"help=basic auth username, env=HTTP_USER"`
-	Pass               string   `opts:"help=basic auth password, env=HTTP_PASS"`
-	AllowedIPs         []string `opts:"name=allow-ip, help=allow ip or cidr block"`
-	AllowedCountries   []string `opts:"name=allow-country, short=y, help=allow ip range by 2-letter ISO country code"`
-	TrustProxy         bool     `opts:"help=trust proxy HTTP headers to provide remote ip address"`
 	ProgramArgs        []string `opts:"mode=arg, name=arg, help=args can be either a command with arguments or a webproc file, min=1"`
-	Log                Log      `opts:"help=log mode (must be 'webui' or 'proxy' or 'both' defaults to 'both')"`
 	OnExit             OnExit   `opts:"help=process exit action, short=o, default=ignore"`
-	OnSave             OnSave   `opts:"help=config save action, short=s, default=restart"`
 	ConfigurationFiles []string `opts:"mode=flag, help=writable configuration file"`
 	RestartWatch       bool     `opts:"short=w,help=changing config files on disk triggers a restart"`
 	RestartTimeout     Duration `opts:"help=restart timeout controls when to perform a force kill, default=30s"`
-	MaxLines           int      `opts:"help=maximum number of log lines to show in webui, default=5000"`
 }
 
 func LoadConfig(path string, c *Config) error {
@@ -79,17 +62,6 @@ func ValidateConfig(c *Config) error {
 	if c.Port == 0 {
 		c.Port = 8080
 	}
-	if c.MaxLines == 0 {
-		c.MaxLines = 5000
-	}
-	switch c.Log {
-	case LogBoth, LogProxy, LogWebUI:
-		//valid
-	case "":
-		c.Log = LogBoth
-	default:
-		return fmt.Errorf("log option must be 'both' 'proxy' or 'webui'")
-	}
 	switch c.OnExit {
 	case OnExitProxy, OnExitIgnore, OnExitRestart:
 		//valid
@@ -98,14 +70,6 @@ func ValidateConfig(c *Config) error {
 	default:
 		return fmt.Errorf("on-exit option must be 'proxy' 'ignore' or 'restart'")
 	}
-	switch c.OnSave {
-	case OnSaveContinue, OnSaveRestart:
-		//valid
-	case "":
-		c.OnSave = OnSaveRestart
-	default:
-		return fmt.Errorf("on-restart option must be 'continue' or 'restart'")
-	}
 	if c.RestartTimeout <= 0 {
 		c.RestartTimeout = Duration(30 * time.Second)
 	}
@@ -113,11 +77,6 @@ func ValidateConfig(c *Config) error {
 }
 
 // helper types
-
-func (o *OnSave) UnmarshalTOML(data []byte) error {
-	*o = OnSave(quoted(data))
-	return nil
-}
 
 func (o *OnExit) UnmarshalTOML(data []byte) error {
 	*o = OnExit(quoted(data))
@@ -131,11 +90,6 @@ func (o *OnExit) Set(s string) error {
 
 func (o *OnExit) String() string {
 	return string(*o)
-}
-
-func (o *Log) UnmarshalTOML(data []byte) error {
-	*o = Log(quoted(data))
-	return nil
 }
 
 func (d *Duration) UnmarshalTOML(data []byte) error {
