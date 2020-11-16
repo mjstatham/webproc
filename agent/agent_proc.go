@@ -63,14 +63,7 @@ func (a *agent) runProcOnce(prog string, c Config) int {
 	}
 	stdout := []io.Writer{}
 	stderr := []io.Writer{}
-	if c.Log == LogBoth || c.Log == LogProxy {
-		stdout = append(stdout, os.Stdout)
-		stderr = append(stdout, os.Stderr)
-	}
-	if c.Log == LogBoth || c.Log == LogWebUI {
-		stdout = append(stdout, &msgQueuer{"out", a.msgQueue})
-		stderr = append(stdout, &msgQueuer{"err", a.msgQueue})
-	}
+
 	proc.Stdout = io.MultiWriter(stdout...)
 	proc.Stderr = io.MultiWriter(stderr...)
 	proc.Stdin = os.Stdin

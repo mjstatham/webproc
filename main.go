@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/jpillora/opts"
-	"github.com/jpillora/webproc/agent"
+	"github.com/mjstatham/webproc/agent"
 )
 
 var version = "0.0.0-src"
